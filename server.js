@@ -5,12 +5,17 @@ var app = express();
 const bodyParser = require('body-parser')
 const process = require('process');
 const fileUpload = require('express-fileupload');
+const fileSystemExplorer = require('file-system-explorer');
+const fsExplorer = new fileSystemExplorer.FileSystemExplorer();
+//let resp = require('ejs');
 
+app.set('views',process.cwd()+'/views');
+app.set('view engine', 'ejs');
 app.use(cors());
 app.use('/public', express.static(process.cwd() + '/public'));
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
-app.use(fileUpload({    
+app.use(fileUpload({
     useTempFiles : true,
     tempFileDir : __dirname + '/tmp/',
     safeFileNames : true,
@@ -18,8 +23,21 @@ app.use(fileUpload({
     uploadTimeout: 300000 //5 minutes
     }));
 
+
+const uploaddir = '/public/upload/';
+// return JSON object for directory tree
+
+
+
 app.get('/', function (req, res) {
-    res.sendFile(process.cwd() + '/views/index.html');
+  const myPathTree = fsExplorer.createFileSystemTree(process.cwd() + uploaddir);
+  let downloadables = myPathTree['children']
+    .map(item=>{
+      return {name: item.name, path: uploaddir+item.name, modified: item.mtime}
+    });
+
+    res.render('index', {downloadables: downloadables});
+    //res.send('Hello');
 });
 
 
@@ -38,15 +56,12 @@ const postfileanalyse = (req,res,next) => {
   }
   const upfile = req.files.upfile;
   const uploadPath = __dirname + '/public/upload/' + upfile.name;
-  console.log(uploadPath);
   upfile.mv(uploadPath, function(err) {
     if (err) return res.status(500).send(err);
-
     console.log(upfile)
-    res.json({name: upfile.name, type: upfile.mimetype, size: upfile.size}); 
+    res.json({name: upfile.name, type: upfile.mimetype, size: upfile.size});
   });
-  
-  
+
 }
 
 app.post('/api/fileanalyse',postfileanalyse)
