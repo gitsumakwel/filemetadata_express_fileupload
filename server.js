@@ -1,20 +1,44 @@
 var express = require('express');
+//https://www.npmjs.com/package/cors
 var cors = require('cors');
+//use for reading .env file
 require('dotenv').config()
+
 var app = express();
+//https://www.npmjs.com/package/body-parser
 const bodyParser = require('body-parser')
+//https://www.npmjs.com/package/process
 const process = require('process');
-const fileUpload = require('express-fileupload');
+//https://www.npmjs.com/package/express-fileupload
+const fileUpload = require('express-fileupload'); //alternative is muter, but i love express-fileupload
+//https://www.npmjs.com/package/file-system-explorer
 const fileSystemExplorer = require('file-system-explorer');
 const fsExplorer = new fileSystemExplorer.FileSystemExplorer();
-//let resp = require('ejs');
 
+
+//need for ejs
+//create a full path to the views directory to use for this application
 app.set('views',process.cwd()+'/views');
+/*
+alternative
+const path = require('path');
+app.set('views',path.join(__dirname, 'views'));
+app.set()
+*/
+
+//set view engine to ejs "wow"
 app.set('view engine', 'ejs');
+//providing a Connect/Express middleware that can be used to enable CORS
 app.use(cors());
 app.use('/public', express.static(process.cwd() + '/public'));
+//middleware that only parse urlencoded
 app.use(bodyParser.urlencoded({ extended: false }))
+//middleware that only parse JSON
 app.use(bodyParser.json())
+//use tempfiles instead of memory for managing upload process
+//timeout on 5 minutes
+//preserve extension
+//safeFileNames Strips characters from the upload's filename.
 app.use(fileUpload({
     useTempFiles : true,
     tempFileDir : __dirname + '/tmp/',
@@ -25,14 +49,15 @@ app.use(fileUpload({
 
 
 const uploaddir = '/public/upload/';
-// return JSON object for directory tree
-
-
 
 app.get('/', function (req, res) {
+  //process.cwd() used to get the current working directory of the node.js process
+  // return JSON object for directory tree
   const myPathTree = fsExplorer.createFileSystemTree(process.cwd() + uploaddir);
+  // get files from myPathTree
   let downloadables = myPathTree['children']
     .map(item=>{
+      //only get the name, file, modified time per file
       return {name: item.name, path: uploaddir+item.name, modified: item.mtime}
     });
 

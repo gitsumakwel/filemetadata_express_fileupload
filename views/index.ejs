@@ -27,6 +27,8 @@
         <div class="uploads">
           <h4 id="files">Recent Uploads</h4>
           <ul>
+            <%# downloadables contains files that can be downloaded%>
+            <%# sort start with the recent uploaded files %>
             <% downloadables = downloadables.sort((a,b)=>b.modified-a.modified)%>
             <% downloadables.forEach((file,index) => { %>
             <% if (index > 5) return; %>
