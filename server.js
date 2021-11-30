@@ -79,10 +79,15 @@ const postfileanalyse = (req,res,next) => {
   if (!req.files || Object.keys(req.files).length === 0) {
     return res.status(400).send('No files were uploaded.');
   }
+  //when using fileupload, we can access uploaded data from req.files.nameofthefile
   const upfile = req.files.upfile;
+  //set path of where to move the file
   const uploadPath = __dirname + '/public/upload/' + upfile.name;
+  //move the file
   upfile.mv(uploadPath, function(err) {
+    //if theres an error, raise the error
     if (err) return res.status(500).send(err);
+    //no error: send json response
     console.log(upfile)
     res.json({name: upfile.name, type: upfile.mimetype, size: upfile.size});
   });
